@@ -1,0 +1,174 @@
+/* ====== Premium Calendar UI (Soft Pastel Theme) ====== */
+
+.react-calendar {
+  width: 100%;
+  max-width: 420px;
+  border: none;
+  border-radius: 20px;
+  background: #fff;
+  padding: 24px 28px;
+  font-family: "Inter", sans-serif;
+  /* box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); */
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+/* Navigation */
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.react-calendar__navigation button {
+  background: transparent;
+  border: none;
+  color: #1e3a8a;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.react-calendar__navigation button:hover {
+  background-color: #eef2ff;
+}
+
+.react-calendar__navigation__label {
+  color: #1e3a8a;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Weekdays */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px; /* <-- adjust this for spacing between tiles */
+}
+
+/* Tiles */
+.react-calendar__tile {
+  height: 42px;
+  width: 46px;
+  margin: 3px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #111827;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  transition: all 0.25s ease;
+}
+
+.react-calendar__tile--active,
+.react-calendar__tile--rangeStart,
+.react-calendar__tile--rangeEnd {
+  background-color: #3b82f6; /* example blue */
+  color: white;
+  border-radius: 30px;
+}
+
+.react-calendar__tile:enabled:hover {
+  background: #e0e7ff;
+  transform: scale(1.05);
+}
+
+/* Booked Dates */
+.booked-date {
+  background: #9ca3af !important;
+  color: white !important;
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: not-allowed !important;
+}
+
+/* Available Dates (future only) */
+.available-date {
+  background-color: #86fac4 !important; /* soft green */
+  color: #065f46 !important;
+  border-radius: 12px;
+}
+
+/* Today’s Date */
+.react-calendar__tile--now {
+  border: 2px solid #2563eb !important;
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  font-weight: 700;
+  border-radius: 12px;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.3);
+}
+
+/* Disabled Dates */
+.react-calendar__tile:disabled {
+  background: #f3f4f6;
+  color: #4f4f5683;
+  cursor: not-allowed;
+  border-radius: 12px !important;
+}
+
+.past-date {
+  background: #f3f4f6 !important;
+  color: #000 !important;
+  border-radius: 12px !important;
+  cursor: not-allowed !important;
+}
+
+/* Month transition */
+.react-calendar__month-view {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Legend */
+.calendar-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 0px;
+  /* border-top: 1px solid #e5e7eb; */
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.calendar-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-legend .legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.calendar-legend .booked .legend-dot {
+  background-color: #9ca3af;
+}
+
+.calendar-legend .available .legend-dot {
+  background-color: #86fac4;
+}
+
+.calendar-legend .today .legend-dot {
+  background-color: #2563eb;
+}

@@ -1,12 +1,31 @@
 import Booking from "../models/Booking.js";
 import Car from "../models/Car.js";
 
+
 export const checkAvailability = async (car, pickupDate, returnDate) => {
+  // Accept either Date objects or ISO date strings
+  const start = new Date(pickupDate);
+  const end = new Date(returnDate);
+
+  // Normalize to full days to avoid time-of-day issues
+  const dayStart = new Date(start);
+  dayStart.setHours(0, 0, 0, 0);
+
+  const dayEnd = new Date(end);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  // Find any booking that overlaps [dayStart, dayEnd]
   const bookings = await Booking.find({
     car,
-    pickupDate: { $lte: returnDate },
-    returnDate: { $gte: pickupDate },
+    status: { $in: ["pending", "confirmed"] },
+    pickupDate: { $lte: dayEnd },
+    returnDate: { $gte: dayStart },
   });
+
+  // Debug log (remove or reduce in production)
+  console.log(
+    `checkAvailability for car ${car}: searching overlaps with ${dayStart.toISOString()} - ${dayEnd.toISOString()}, found ${bookings.length}`
+  );
 
   return bookings.length === 0;
 };
@@ -41,77 +60,15 @@ export const checkAvailabilityOfCar = async (req, res) => {
   }
 };
 
-// export const createBooking = async (req, res) => {
-//   try {
-//     const { _id } = req.user;
-//     const { car, pickupDate, returnDate } = req.body;
-
-//     if (!car || !pickupDate || !returnDate) {
-//       return res
-//         .status(400)
-//         .json({ message: "Car, start date, and end date are required" });
-//     }
-
-//     const isAvailable = await checkAvailability(car, pickupDate, returnDate);
-//     if (!isAvailable) {
-//       return res.json({
-//         success: false,
-//         message: "Car is not available for booking",
-//       });
-//     }
-
-//     const carData = await Car.findById(car);
-
-//     if (!carData) {
-//       return res.status(404).json({ message: "Car not found" });
-//     }
-
-//     if (!carData.owner) {
-//       return res.status(400).json({ message: "Car does not have an owner assigned" });
-//     }
-
-//     // Convert dates to Date objects
-//     const start = new Date(pickupDate);
-//     const end = new Date(returnDate);
-
-//     if (end < start) {
-//       return res
-//         .status(400)
-//         .json({ message: "End date cannot be before start date" });
-//     }
-
-//     // Calculate total price
-//     const noOfDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-//     const price = noOfDays * carData.pricePerDay;
-
-//     // Create booking
-//     const booking = await Booking.create({
-//       car: car._id,
-//       user: _id,
-//       owner: carData.owner,
-//       pickupDate,
-//       returnDate,
-//       price,
-//       paymentStatus: "pending",
-//     });
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Car booked successfully",
-//       booking,
-//     });
-//   } catch (error) {
-//     console.error("Book car error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
 export const createBooking = async (req, res) => {
   try {
+    console.log("---- CREATE BOOKING ----");
+    console.log("USER:", req.user && req.user._id);
+    console.log("BODY:", req.body);
+
     const { _id } = req.user; // logged-in user
     const { car, pickupDate, returnDate } = req.body;
 
-    // ✅ Validate input
     if (!car || !pickupDate || !returnDate) {
       return res.status(400).json({
         success: false,
@@ -119,71 +76,59 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // ✅ Check if the car exists
     const carData = await Car.findById(car);
     if (!carData) {
-      return res.status(404).json({
-        success: false,
-        message: "Car not found",
-      });
+      return res.status(404).json({ success: false, message: "Car not found" });
     }
 
-    // ✅ Ensure the car has an owner
+    // If your business requires owner always set, keep this. Otherwise, log and handle.
     if (!carData.owner) {
+      console.warn(`Car ${car} has no owner assigned`);
       return res.status(400).json({
         success: false,
         message: "Car does not have an owner assigned",
       });
     }
 
-    // ✅ Convert dates and validate range
     const start = new Date(pickupDate);
     const end = new Date(returnDate);
-    if (end < start) {
-      return res.status(400).json({
-        success: false,
-        message: "Return date cannot be before pickup date",
-      });
+
+    // normalize times to days
+    const dayStart = new Date(start); dayStart.setHours(0,0,0,0);
+    const dayEnd = new Date(end); dayEnd.setHours(23,59,59,999);
+
+    if (dayEnd < dayStart) {
+      return res.status(400).json({ success: false, message: "Return date cannot be before pickup date" });
     }
 
-    // ✅ Check availability
-    const isAvailable = await checkAvailability(carData._id, start, end);
+    // Check availability using normalized range
+    const isAvailable = await checkAvailability(carData._id, dayStart, dayEnd);
     if (!isAvailable) {
       return res.status(400).json({
         success: false,
-        message: "Car is not available for the selected dates",
+        message: "Selected dates are already booked",
       });
     }
 
-    // ✅ Calculate total price
-    const noOfDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) || 1;
+    const noOfDays = Math.ceil((dayEnd - dayStart) / (1000 * 60 * 60 * 24)) || 1;
     const price = noOfDays * carData.pricePerDay;
 
-    // ✅ Create booking
     const booking = await Booking.create({
       car: carData._id,
       user: _id,
       owner: carData.owner,
-      pickupDate: start,
-      returnDate: end,
+      pickupDate: dayStart,
+      returnDate: dayEnd,
       price,
       paymentStatus: "pending",
-      status: "pending", // default status
+      status: "pending",
     });
 
-    // ✅ Return success
-    res.status(201).json({
-      success: true,
-      message: "Car booked successfully",
-      booking,
-    });
+    console.log("Booking created:", booking._id);
+    return res.status(201).json({ success: true, message: "Car booked successfully", booking });
   } catch (error) {
     console.error("Book car error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error. Please try again later.",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: "Server error. Please try again later.", error: error.message });
   }
 };
 

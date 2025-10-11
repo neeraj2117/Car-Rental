@@ -32,9 +32,7 @@ const ManageBookings = () => {
 
         // Update UI immediately
         setBookings((prev) =>
-          prev.map((b) =>
-            b._id === bookingId ? { ...b, status } : b
-          )
+          prev.map((b) => (b._id === bookingId ? { ...b, status } : b))
         );
       } else {
         toast.error(response.data.message);
@@ -64,7 +62,8 @@ const ManageBookings = () => {
       <div className="w-full max-w-7xl bg-white rounded-xl shadow-sm p-6">
         <h1 className="text-3xl font-semibold mb-1">Manage Bookings</h1>
         <p className="text-gray-500 font-light text-[16px] mt-2 mb-6">
-          View all your car bookings, manage their status, and update booking details.
+          View all your car bookings, manage their status, and update booking
+          details.
         </p>
 
         <div className="overflow-x-auto mt-10 border border-gray-100 rounded-lg">
@@ -89,18 +88,34 @@ const ManageBookings = () => {
                       className="border-b border-gray-100 hover:bg-gray-50 transition"
                     >
                       {/* Car info */}
+                      {/* Car info */}
                       <td className="py-4 px-6 flex items-center gap-3">
-                        <img
-                          src={car.image}
-                          alt={`${car.brand} ${car.model}`}
-                          className="w-20 h-12 rounded-md object-cover"
-                        />
+                        {car ? (
+                          car.image ? (
+                            <img
+                              src={car.image}
+                              alt={`${car.brand} ${car.model}`}
+                              className="w-20 h-12 rounded-md object-cover"
+                            />
+                          ) : (
+                            <div className="w-20 h-12 rounded-md bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                              No Image
+                            </div>
+                          )
+                        ) : (
+                          <div className="w-20 h-12 rounded-md bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                            No Car Data
+                          </div>
+                        )}
+
                         <div>
                           <p className="font-semibold text-[16px]">
-                            {car.brand} {car.model}
+                            {car ? `${car.brand} ${car.model}` : "N/A"}
                           </p>
                           <p className="text-gray-500 font-light text-[13px]">
-                            {car.seating_capacity} seats • {car.transmission}
+                            {car
+                              ? `${car.seating_capacity} seats • ${car.transmission}`
+                              : "N/A"}
                           </p>
                         </div>
                       </td>
