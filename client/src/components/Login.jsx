@@ -20,18 +20,15 @@ const Login = () => {
       console.log("Response data:", data);
 
       if (data.token) {
-        // Set token in context, axios, and localStorage
         setToken(data.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
         localStorage.setItem("token", data.token);
 
-        // Fetch user and set in context
         const { data: userData } = await axios.get("/api/user/data");
         if (userData.success) {
           setUser(userData.user);
         }
 
-        // Success toast
         toast.success(
           state === "register"
             ? "Account created successfully!"
@@ -45,10 +42,21 @@ const Login = () => {
         toast.error(data.message || "Login failed");
       }
     } catch (error) {
-      if (error.response && error.response.status === 409) {
-        toast.error("User already exists!");
+      if (error.response) {
+        const status = error.response.status;
+        const msg =
+          error.response.data?.message ||
+          (status === 401
+            ? "Invalid email or password"
+            : status === 409
+            ? "User already exists!"
+            : "Something went wrong");
+
+        toast.error(msg);
+      } else if (error.request) {
+        toast.error("No response from server. Please check your internet.");
       } else {
-        toast.error(error.message);
+        toast.error("An unexpected error occurred.");
       }
     }
   };
